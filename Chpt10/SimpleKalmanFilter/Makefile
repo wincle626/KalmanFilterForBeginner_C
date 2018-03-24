@@ -1,8 +1,7 @@
 CC=gcc
-Filename=MovAvgFilter
+Filename=SimpleKalmanFilter
 
 all:
 	$(CC) -o test $(Filename).c -lm -lgraph
 clean:
-	rm test
-
+	rm -rf test

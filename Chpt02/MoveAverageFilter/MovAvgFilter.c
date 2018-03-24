@@ -2,16 +2,22 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <graphics.h>
 
-#define DEBUG
+//#define DEBUG
+#define SAVE
 #define n 10
 
 static int firstRun1 = 0;
 static int firstRun2 = 0;
 static int firstRun3 = 0;
+static float *sonarAlt;
 
 float MovAvgFilter1(float x){
 
+#ifdef DEBUG
+	printf("enter function %s\n",__func__);
+#endif
 	static float prevAvg;
 	static float xbuf[n+1];
 	float avg;
@@ -27,17 +33,25 @@ float MovAvgFilter1(float x){
 		prevAvg = x;
 		firstRun1 = 1;
 		
+#ifdef DEBUG
+	printf("initialization finished\n");
+#endif
 	}
 	
 	for(i=0;i<n;i++){
-		xbuf[i] = xbuf[n+1];
+		xbuf[i] = xbuf[i+1];
 	}
 	xbuf[n] = x;
-
+#ifdef DEBUG
+	printf("shifted\n");
+#endif
 	avg = prevAvg + (x - xbuf[0]) / n;
 
 	prevAvg = avg;
 
+#ifdef DEBUG
+	printf("exit function %s\n",__func__);
+#endif
 	return avg;
 
 }
@@ -73,7 +87,6 @@ float MovAvgFilter2(float x){
 float GetSonar(){
 	
 	FILE *fp;
-	static float *sonarAlt;
 	float h;
 	static int k;
 	int i = 0;
@@ -87,13 +100,20 @@ float GetSonar(){
 			size = size + 1;	
 		}
 		fclose(fp);
+#ifdef DEBUG
+	printf("total line number is %d\n",size);
+#endif
 		
 		sonarAlt = (float *) malloc(sizeof(float)*size);
 		fp = fopen("SonarAlt.txt","r");
 		while(fgets(line,sizeof(line),fp)!=NULL){
 			sonarAlt[i] = (float) atof(line);
 			i  = i + 1;
+#ifdef DEBUG
+	printf("current line index is %d\n",i);
+#endif
 		}
+		fclose(fp);
 		
 		k = 0;
 		firstRun3 = 1;
@@ -101,6 +121,10 @@ float GetSonar(){
 	
 	h = sonarAlt[k];
 	k = k + 1;
+#ifdef DEBUG
+	printf("returned line index is %d\n",k);
+#endif
+	return h;
 
 }
 
@@ -112,7 +136,10 @@ int main(int argc, char **argv){
 	float xm;
 	float *Xsaved;
 	float *Xmsaved;
+	FILE *fp;
 
+	Xsaved = (float *) malloc(sizeof(float)*Nsample);
+	Xmsaved = (float *) malloc(sizeof(float)*Nsample);
 	for(k=0;k<Nsample;k++){
 
 		xm = GetSonar();
@@ -127,5 +154,19 @@ int main(int argc, char **argv){
 		printf("%dth input:%f,  output: %f\n", k, Xmsaved[k], Xsaved[k]);		
 	}
 #endif
+
+#ifdef SAVE
+	fp = fopen("Xmsaved.txt","a+");
+	for(k=0;k<Nsample;k++){
+		fprintf(fp,"%f\n",Xmsaved[k]);
+	}
+	fclose(fp);
+	fp = fopen("Xsaved.txt","a+");
+	for(k=0;k<Nsample;k++){
+		fprintf(fp,"%f\n",Xsaved[k]);
+	}
+	fclose(fp);
+#endif
+	
 	return 0;
 }

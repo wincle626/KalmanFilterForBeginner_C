@@ -1,5 +1,5 @@
 CC=gcc
-Filename=MovAvgFilter
+Filename=LowPassFilter
 
 all:
 	$(CC) -o test $(Filename).c -lm -lgraph

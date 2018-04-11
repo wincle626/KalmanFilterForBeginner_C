@@ -43,10 +43,43 @@ float SimpleKalman(float z){
 	float xp = A * x;
 	float Pp = A * P * A_trans + Q;
 
-	K = Pp * H_trans + 1 (H * Pp * H_trans + R);
+	float K = Pp * H_trans + 1 (H * Pp * H_trans + R);
 	x = xp + K * (z - H * xp);
 	P = Pp - K * H * Pp;
 
+}
+
+void SimpleKalman2(float z, float* P, float *K){
+	
+	static float A, H, Q, R;
+	static float A_trans, H_trans;
+	static float x, P;
+
+	if(firstRun!=0){
+		
+		A = 1;
+		H = 1;
+
+		Q = 0;
+		R = 4;
+
+		x = 14;
+		P = 6;
+
+		A_trans = A;
+		H_trans = H;
+		
+		firstRun = 1;
+
+	}
+
+	float xp = A * x;
+	float Pp = A * P * A_trans + Q;
+
+	float K = Pp * H_trans + 1 (H * Pp * H_trans + R);
+	x = xp + K * (z - H * xp);
+	P = Pp - K * H * Pp;
+	
 }
 
 int main(int argc, char **argv){
@@ -55,6 +88,7 @@ int main(int argc, char **argv){
 	float dt = 0.2;
 	float t[Nsamples];
 	float Xsaved[Nsamples];
+	float Xsaved2[Nsamples][3];
 	float Zsaved[Nsamples];
 	float z, volt;
 	
@@ -69,5 +103,13 @@ int main(int argc, char **argv){
 		volt = SimpleKalman(z);
 		printf("z-%f, volt-%f\n",z,volt);
 	}
+	
+	for(i=0;i<Nsamples;i++){
+		float P, K;
+		z = GetVolt();
+		SimpleKalman2(z, &P, &K);
+		printf("z-%f, volt-%f, P-%f, K-%f\n",z,volt,P,K);
+	}
 	return 0;
+	
 }
